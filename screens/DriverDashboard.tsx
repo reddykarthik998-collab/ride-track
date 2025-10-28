@@ -51,7 +51,7 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
         setError('');
     };
     
-    const handleCheckIn = (tripId: string, checkInTime: string, startOdometer: number) => {
+    const handleCheckIn = (checkInTime: string, startOdometer: number) => {
         const updatedTrip: Trip = {
             ...activeTrip!,
             status: 'IN_PROGRESS',
@@ -63,7 +63,7 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
         setActiveTrip(updatedTrip);
     };
 
-    const handleCheckOut = (tripId: string, endOdometer: number, remarks: string) => {
+    const handleCheckOut = (endOdometer: number, remarks: string) => {
         const updatedTrip: Trip = {
             ...activeTrip!,
             status: 'COMPLETED',

@@ -66,6 +66,7 @@ export interface Trip {
     bookingClientName: string; // Stores the manually entered client name, replacing the old Client entity.
     driverId: string;
     fareId: string;
+    billNumber?: string;
     
     // Planning fields from company
     description?: string;

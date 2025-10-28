@@ -13,7 +13,7 @@ import ExportButton from '../../components/ExportButton';
 import { exportToCsv } from '../../utils/exporter';
 
 const TripManagement: React.FC = () => {
-    const { trips, clients, drivers, fares, deleteTrip } = useAppContext();
+    const { trips, clients, drivers, fares, events, deleteTrip } = useAppContext();
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [tripToEdit, setTripToEdit] = useState<Trip | null>(null);
     const [tripToDelete, setTripToDelete] = useState<string | null>(null);
@@ -51,17 +51,35 @@ const TripManagement: React.FC = () => {
     const handleExportCSV = () => {
         const dataToExport = tripsWithData.map(trip => {
             const driver = drivers.find(d => d.id === trip.driverId);
+            const event = events.find(e => e.id === trip.eventId);
+            const fare = fares.find(f => f.id === trip.fareId);
             return {
                 'Trip Number': trip.tripNumber,
-                'Client': trip.clientName,
-                'Driver': trip.driverName,
-                'Check-in Time': formatDateTime(trip.plannedCheckInTime),
+                'Bill Number': (trip as any).billNumber || 'N/A',
                 'Status': trip.status,
+                'Client': trip.clientName,
+                'Event': event?.name || 'N/A',
                 'Booking Client/Dept': trip.bookingClientName,
+                'Description': trip.description || 'N/A',
+                'Reporting Point': trip.reportingPoint,
+                'Reporting To': trip.reportingTo,
+                'Reporting To Phone': trip.reportingToPhone,
+                'Driver': trip.driverName,
+                'Driver Phone': driver?.phone || 'N/A',
                 'Vehicle': driver?.vehicleName || 'N/A',
                 'License Plate': driver?.vehicleLicensePlate || 'N/A',
-                'Fare': fares.find(f => f.id === trip.fareId)?.name || 'N/A',
-            }
+                'Fare': fare?.name || 'N/A',
+                'Destination URL': trip.destinationUrl || 'N/A',
+                'Planned Check-in': formatDateTime(trip.plannedCheckInTime),
+                'Planned Odometer': trip.plannedStartOdometer,
+                'Actual Check-in': trip.actualCheckInTime ? formatDateTime(trip.actualCheckInTime) : 'N/A',
+                'Actual Start Odometer': trip.actualStartOdometer ?? 'N/A',
+                'Start Photo URL': trip.startOdometerPhotoUrl || 'N/A',
+                'Actual Check-out': trip.actualCheckOutTime ? formatDateTime(trip.actualCheckOutTime) : 'N/A',
+                'Actual End Odometer': trip.actualEndOdometer ?? 'N/A',
+                'End Photo URL': trip.endOdometerPhotoUrl || 'N/A',
+                'Remarks': trip.remarks || 'N/A',
+            };
         });
         exportToCsv('trips', dataToExport);
     };
@@ -100,6 +118,7 @@ const TripManagement: React.FC = () => {
                                 <thead className="bg-neutral-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Trip #</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Bill #</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Client</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Driver</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Check-in Time</th>
@@ -111,6 +130,7 @@ const TripManagement: React.FC = () => {
                                     {tripsWithData.map(trip => (
                                         <tr key={trip.id}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">{trip.tripNumber}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{(trip as any).billNumber || 'N/A'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{trip.clientName}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{trip.driverName}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{formatDateTime(trip.plannedCheckInTime)}</td>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserType, Driver, Trip } from './types';
+import { UserType, Trip } from './types';
 import LoginScreen from './screens/LoginScreen';
 import AdminDashboard from './screens/AdminDashboard';
 import DriverDashboard from './screens/DriverDashboard';
@@ -12,7 +12,6 @@ interface AuthState {
     userType: UserType;
     userId?: string;
     token?: string;
-    driver?: Driver;
     initialTrip?: Trip;
 }
 
@@ -36,7 +35,8 @@ const AppContent: React.FC = () => {
                     // Validate token with backend if it exists
                     if (parsedAuth.token) {
                         try {
-                            const response = await fetch('http://localhost:3001/api/auth/me', {
+                            const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://ride-track-pro.onrender.com/api';
+                            const response = await fetch(`${API_BASE}/auth/me`, {
                                 headers: {
                                     'Authorization': `Bearer ${parsedAuth.token}`
                                 }
@@ -72,7 +72,6 @@ const AppContent: React.FC = () => {
             userType: type,
             userId,
             token,
-            driver: type === UserType.DRIVER && userId ? drivers.find(d => d.id === userId) || undefined : undefined,
             initialTrip: trip
         };
         
@@ -97,6 +96,11 @@ const AppContent: React.FC = () => {
         );
     }
 
+    // Derive driver from userId so it's resilient to async data loading
+    const derivedDriver = authState?.userId ? drivers.find(d => d.id === authState.userId) : undefined;
+
+    const isDriverContextLoading = authState?.userType === UserType.DRIVER && drivers.length === 0;
+
     return (
         <div className="bg-neutral-50 min-h-screen font-sans">
             {!authState ? (
@@ -107,17 +111,26 @@ const AppContent: React.FC = () => {
                     {authState.userType === UserType.ADMIN && (
                          <Header title="Admin Dashboard" icon={<UserCircleIcon className="w-8 h-8 text-white"/>} onLogout={handleLogout} />
                     )}
-                    {authState.userType === UserType.DRIVER && authState.driver && (
+                    {authState.userType === UserType.DRIVER && (
                         <Header title="Driver Dashboard" icon={<CarIcon className="w-8 h-8 text-white"/>} onLogout={handleLogout} />
                     )}
 
                     <main>
                         {authState.userType === UserType.ADMIN && <AdminDashboard />}
-                        {authState.userType === UserType.DRIVER && authState.driver && (
-                            <DriverDashboard 
-                                driver={authState.driver}
-                                initialTrip={authState.initialTrip || null}
-                            />
+                        {authState.userType === UserType.DRIVER && (
+                            isDriverContextLoading ? (
+                                <div className="min-h-[50vh] flex items-center justify-center">
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                        <p className="text-gray-600">Preparing your driver session...</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <DriverDashboard 
+                                    driver={derivedDriver || { id: authState.userId || 'unknown', name: 'Driver', phone: '', vehicleName: '', vehicleLicensePlate: '' }}
+                                    initialTrip={authState.initialTrip || null}
+                                />
+                            )
                         )}
                     </main>
                 </>

@@ -10,8 +10,8 @@ import { formatDateTime } from '../../utils/formatters';
 
 interface RideCardProps {
     trip: Trip;
-    onCheckIn: (tripId: string, checkInTime: string, startOdometer: number) => void;
-    onCheckOut: (tripId: string, endOdometer: number, remarks: string) => void;
+    onCheckIn: (checkInTime: string, startOdometer: number) => void;
+    onCheckOut: (endOdometer: number, remarks: string) => void;
 }
 
 const RideCard: React.FC<RideCardProps> = ({ trip, onCheckIn, onCheckOut }) => {
@@ -35,7 +35,7 @@ const RideCard: React.FC<RideCardProps> = ({ trip, onCheckIn, onCheckOut }) => {
             alert('Please enter the starting odometer reading.');
             return;
         }
-        onCheckIn(trip.id, new Date(checkInTime).toISOString(), Number(startOdometer));
+        onCheckIn(new Date(checkInTime).toISOString(), Number(startOdometer));
         setCheckInModalOpen(false);
     };
     
@@ -48,7 +48,7 @@ const RideCard: React.FC<RideCardProps> = ({ trip, onCheckIn, onCheckOut }) => {
             alert('End odometer must be greater than the start odometer.');
             return;
         }
-        onCheckOut(trip.id, Number(endOdometer), remarks);
+        onCheckOut(Number(endOdometer), remarks);
         setCheckOutModalOpen(false);
     };
 

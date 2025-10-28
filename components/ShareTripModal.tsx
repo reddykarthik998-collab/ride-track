@@ -18,7 +18,7 @@ const ShareTripModal: React.FC<ShareTripModalProps> = ({ isOpen, onClose, trip }
     if (!isOpen || !trip) return null;
 
     const driver = drivers.find(d => d.id === trip.driverId);
-    const shareText = `New Trip Assignment: Your Trip Number is ${trip.tripNumber}. Please log in to the Sri Hari Travels app to start.`;
+    const shareText = `New Trip Assignment: Your Trip Number is ${trip.tripNumber}. Please log in to the Sree Hari Travels app to start.`;
     const smsLink = driver ? `sms:${driver.phone}?body=${encodeURIComponent(shareText)}` : '';
     const canShare = !!navigator.share;
 

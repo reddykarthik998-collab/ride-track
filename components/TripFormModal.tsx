@@ -63,6 +63,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
     const [formData, setFormData] = useState<TripFormState>(initialFormState);
     const [isExistingDriver, setIsExistingDriver] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof TripFormState, string>>>({});
+    const [isSaving, setIsSaving] = useState(false);
     
     useEffect(() => {
         if (isOpen) {
@@ -182,63 +183,69 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!validate()) return;
+        if (isSaving) return;
+        setIsSaving(true);
 
-        let driverId;
-        let existingDriver = drivers.find(d => d.phone === formData.driverPhone);
+        try {
+            let driverId: string;
+            const existingDriver = drivers.find(d => d.phone === formData.driverPhone);
 
-        if (existingDriver) {
-            driverId = existingDriver.id;
-        } else {
-            const newDriver = addDriver({
-                name: formData.driverName.trim(),
-                phone: formData.driverPhone.trim(),
-                vehicleName: formData.vehicleName.trim(),
-                vehicleLicensePlate: formData.vehicleLicensePlate.trim().toUpperCase(),
-            });
-            driverId = newDriver.id;
-        }
-        
-        const reportingPhone = formData.reportingToPhone.trim();
-        if (formData.clientId && reportingPhone && formData.reportingTo.trim()) {
-            const isExistingCustomer = customers.some(
-                c => c.clientId === formData.clientId && c.phone === reportingPhone
-            );
-            if (!isExistingCustomer) {
-                addCustomer({
-                    name: formData.reportingTo.trim(),
-                    phone: reportingPhone,
-                    clientId: formData.clientId,
+            if (existingDriver) {
+                driverId = existingDriver.id;
+            } else {
+                const newDriver = await addDriver({
+                    name: formData.driverName.trim(),
+                    phone: formData.driverPhone.trim(),
+                    vehicleName: formData.vehicleName.trim(),
+                    vehicleLicensePlate: formData.vehicleLicensePlate.trim().toUpperCase(),
                 });
+                driverId = newDriver.id;
             }
-        }
+            
+            const reportingPhone = formData.reportingToPhone.trim();
+            if (formData.clientId && reportingPhone && formData.reportingTo.trim()) {
+                const isExistingCustomer = customers.some(
+                    c => c.clientId === formData.clientId && c.phone === reportingPhone
+                );
+                if (!isExistingCustomer) {
+                    await addCustomer({
+                        name: formData.reportingTo.trim(),
+                        phone: reportingPhone,
+                        clientId: formData.clientId,
+                    });
+                }
+            }
 
-        const tripDataForSave = {
-            clientId: formData.clientId,
-            eventId: formData.eventId || undefined,
-            bookingClientName: formData.bookingClientName,
-            driverId: driverId,
-            fareId: formData.fareId,
-            description: formData.description,
-            reportingPoint: formData.reportingPoint,
-            reportingTo: formData.reportingTo,
-            reportingToPhone: formData.reportingToPhone,
-            plannedCheckInTime: new Date(formData.plannedCheckInTime).toISOString(),
-            plannedStartOdometer: Number(formData.plannedStartOdometer),
-            destinationUrl: formData.destinationUrl,
-            status: tripToEdit?.status || 'ASSIGNED',
-        };
+            const tripDataForSave = {
+                clientId: formData.clientId,
+                eventId: formData.eventId || undefined,
+                bookingClientName: formData.bookingClientName,
+                driverId: driverId,
+                fareId: formData.fareId,
+                description: formData.description,
+                reportingPoint: formData.reportingPoint,
+                reportingTo: formData.reportingTo,
+                reportingToPhone: formData.reportingToPhone,
+                plannedCheckInTime: new Date(formData.plannedCheckInTime).toISOString(),
+                plannedStartOdometer: Number(formData.plannedStartOdometer),
+                destinationUrl: formData.destinationUrl,
+                status: tripToEdit?.status || 'ASSIGNED',
+            };
 
-        if (tripToEdit) {
-            updateTrip({ ...tripToEdit, ...tripDataForSave });
-        } else {
-            const tripNumber = generateTripNumber(formData.clientId, clients, trips);
-            addTrip({ ...tripDataForSave, tripNumber, status: 'ASSIGNED' });
+            if (tripToEdit) {
+                await updateTrip({ ...tripToEdit, ...tripDataForSave });
+            } else {
+                const tripNumber = generateTripNumber(formData.clientId, clients, trips);
+                await addTrip({ ...tripDataForSave, tripNumber, status: 'ASSIGNED' });
+            }
+            
+            onClose();
+        } finally {
+            setIsSaving(false);
         }
-        
-        onClose();
     };
 
     return (
@@ -312,8 +319,8 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
                     </div>
                 </div>
                 <div className="bg-neutral-100 px-6 py-3 flex justify-end space-x-2 border-t">
-                    <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">Save Trip</Button>
+                    <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving}>Cancel</Button>
+                    <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Trip'}</Button>
                 </div>
             </form>
         </Modal>

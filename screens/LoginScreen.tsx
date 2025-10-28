@@ -92,7 +92,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, trips }) => {
             <div className="max-w-md mx-auto mt-10">
                 <Card>
                     <CardHeader className="text-center">
-                        <h1 className="text-2xl font-bold text-neutral-800">Welcome to Sri Hari Travels</h1>
+                        <h1 className="text-2xl font-bold text-neutral-800">Welcome to Sree Hari Travels</h1>
                         <p className="text-neutral-500">Please select your role to continue</p>
                     </CardHeader>
                     <CardContent className="space-y-6">
