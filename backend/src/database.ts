@@ -1,4 +1,4 @@
-import { MongoClient, Db } from 'mongodb';
+import { MongoClient, Db, GridFSBucket } from 'mongodb';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -7,6 +7,7 @@ const connectionString = process.env.MONGODB_URI || 'mongodb+srv://ridetrack97_d
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
+let bucket: GridFSBucket | null = null;
 
 export const initializeDatabase = async () => {
   try {
@@ -17,6 +18,7 @@ export const initializeDatabase = async () => {
     
     db = client.db('ridetrack');
     console.log('✅ Using database: ridetrack');
+    bucket = new GridFSBucket(db, { bucketName: 'photos' });
     
     // Test the connection
     await db.admin().ping();
@@ -33,6 +35,13 @@ export const getDatabase = (): Db => {
     throw new Error('Database not initialized. Call initializeDatabase() first.');
   }
   return db;
+};
+
+export const getBucket = (): GridFSBucket => {
+  if (!bucket) {
+    throw new Error('GridFS bucket not initialized. Call initializeDatabase() first.');
+  }
+  return bucket;
 };
 
 export const closeDatabase = async () => {

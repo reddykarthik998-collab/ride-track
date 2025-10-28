@@ -1,4 +1,5 @@
 // API service for communicating with the backend
+import { Trip } from '../types';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class ApiService {
@@ -50,13 +51,44 @@ class ApiService {
     return {} as T;
   }
 
-  // Trips API
-  async getTrips() {
-    return this.request('/trips');
+  // ---- Photos ----
+  async uploadStartPhoto(tripId: string, file: File) {
+    const form = new FormData();
+    form.append('photo', file);
+    const res = await fetch(`${API_BASE_URL}/trips/${tripId}/start-photo`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    return res.json();
   }
 
-  async getTripByNumber(tripNumber: string) {
-    return this.request(`/trips/trip-number/${tripNumber}`);
+  async uploadEndPhoto(tripId: string, file: File) {
+    const form = new FormData();
+    form.append('photo', file);
+    const res = await fetch(`${API_BASE_URL}/trips/${tripId}/end-photo`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    return res.json();
+  }
+
+  getStartPhotoUrl(tripId: string) {
+    return `${API_BASE_URL}/trips/${tripId}/start`;
+  }
+
+  getEndPhotoUrl(tripId: string) {
+    return `${API_BASE_URL}/trips/${tripId}/end`;
+  }
+
+  // Trips API
+  async getTrips(): Promise<Trip[]> {
+    return this.request<Trip[]>('/trips');
+  }
+
+  async getTripByNumber(tripNumber: string): Promise<Trip> {
+    return this.request<Trip>(`/trips/trip-number/${tripNumber}`);
   }
 
   async createTrip(trip: any) {

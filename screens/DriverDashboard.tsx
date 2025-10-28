@@ -5,6 +5,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import Card, { CardContent } from '../components/Card';
 import { useAppContext } from '../contexts/AppContext';
+import { apiService } from '../utils/apiService';
 import { formatDateTime } from '../utils/formatters';
 
 interface DriverDashboardProps {
@@ -13,14 +14,23 @@ interface DriverDashboardProps {
 }
 
 const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }) => {
-    const { trips, updateTrip } = useAppContext();
+    const { updateTrip } = useAppContext();
     const [tripNumberInput, setTripNumberInput] = useState('');
     const [activeTrip, setActiveTrip] = useState<Trip | null>(initialTrip);
+    const [completedTripView, setCompletedTripView] = useState<Trip | null>(null);
     const [error, setError] = useState('');
 
-    const handleFindTrip = () => {
-        const foundTrip = trips.find(t => t.tripNumber.toLowerCase() === tripNumberInput.toLowerCase() && t.driverId === driver.id);
-        if (foundTrip) {
+    const handleFindTrip = async () => {
+        setError('');
+        setCompletedTripView(null);
+        setActiveTrip(null);
+        try {
+            // Fetch authoritative trip from API by number
+            const foundTrip = await apiService.getTripByNumber(tripNumberInput.trim()) as Trip;
+            if (foundTrip.driverId !== driver.id) {
+                setError('Trip not found or not assigned to you. Please check the Trip Number.');
+                return;
+            }
             const now = new Date();
             const plannedCheckIn = new Date(foundTrip.plannedCheckInTime);
             const earliestLoginTime = new Date(plannedCheckIn.getTime() - 20 * 60 * 1000);
@@ -33,20 +43,27 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
             }
 
             if (foundTrip.status === 'COMPLETED') {
+                // Show read-only details for completed trip
+                setCompletedTripView(foundTrip);
                 setActiveTrip(null);
-                setError('This trip has already been completed.');
+                setError('');
+            } else if (foundTrip.status === 'IN_PROGRESS' && foundTrip.driverId === driver.id) {
+                setActiveTrip(foundTrip);
+                setError('');
             } else {
                  setActiveTrip(foundTrip);
                  setError('');
             }
-        } else {
+        } catch (e) {
             setActiveTrip(null);
-            setError(`Trip not found or not assigned to you. Please check the Trip Number.`);
+            setCompletedTripView(null);
+            setError('Trip not found or not assigned to you. Please check the Trip Number.');
         }
     };
 
     const handleTripCompletion = () => {
         setActiveTrip(null);
+        setCompletedTripView(null);
         setTripNumberInput('');
         setError('');
     };
@@ -56,8 +73,7 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
             ...activeTrip!,
             status: 'IN_PROGRESS',
             actualCheckInTime: checkInTime,
-            actualStartOdometer: startOdometer,
-            startOdometerPhotoUrl: 'https://via.placeholder.com/400x200.png?text=Start+Odometer'
+            actualStartOdometer: startOdometer
         };
         updateTrip(updatedTrip);
         setActiveTrip(updatedTrip);
@@ -69,7 +85,6 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
             status: 'COMPLETED',
             actualCheckOutTime: new Date().toISOString(),
             actualEndOdometer: endOdometer,
-            endOdometerPhotoUrl: 'https://via.placeholder.com/400x200.png?text=End+Odometer',
             remarks
         };
         updateTrip(updatedTrip);
@@ -80,7 +95,7 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <h1 className="text-2xl font-bold text-neutral-800 mb-4">Welcome, {driver.name}</h1>
             
-            {!activeTrip ? (
+            {!activeTrip && !completedTripView ? (
                 <Card>
                     <CardContent className="space-y-4">
                         <p className="text-neutral-600">Please enter the Trip Number provided by your company to begin.</p>
@@ -101,7 +116,7 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
                         {error && <p className="text-brand-red text-sm mt-2">{error}</p>}
                     </CardContent>
                 </Card>
-            ) : (
+            ) : activeTrip ? (
                 <div className="space-y-6">
                     <RideCard
                         trip={activeTrip}
@@ -112,6 +127,23 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
                         End Session & Enter New Trip Number
                     </Button>
                 </div>
+            ) : (
+                <Card>
+                    <CardContent className="space-y-4">
+                        <h2 className="text-lg font-bold text-neutral-800">Trip {completedTripView?.tripNumber}</h2>
+                        <p className="text-sm text-brand-green">This trip is already completed. Details shown below are read-only.</p>
+                        <div className="p-3 bg-neutral-100 rounded-md text-sm space-y-2">
+                            <p><strong>Client:</strong> {completedTripView?.bookingClientName}</p>
+                            <p><strong>Reporting Point:</strong> {completedTripView?.reportingPoint}</p>
+                            {completedTripView?.actualCheckInTime && <p><strong>Check-in:</strong> {formatDateTime(completedTripView.actualCheckInTime)}</p>}
+                            {completedTripView?.actualStartOdometer && <p><strong>Start Odometer:</strong> {completedTripView.actualStartOdometer} km</p>}
+                            {completedTripView?.actualCheckOutTime && <p><strong>Check-out:</strong> {formatDateTime(completedTripView.actualCheckOutTime)}</p>}
+                            {completedTripView?.actualEndOdometer && <p><strong>End Odometer:</strong> {completedTripView.actualEndOdometer} km</p>}
+                            {completedTripView?.remarks && <p><strong>Remarks:</strong> {completedTripView.remarks}</p>}
+                        </div>
+                        <Button variant="secondary" onClick={handleTripCompletion} className="w-full">Close</Button>
+                    </CardContent>
+                </Card>
             )}
         </div>
     );

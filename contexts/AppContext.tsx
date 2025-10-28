@@ -305,7 +305,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try {
             await apiService.updateTrip(trip.id, trip);
             setTrips(prev => prev.map(t => t.id === trip.id ? trip : t));
-            addToast('Trip updated successfully!', 'success');
+            // Refresh trips list to ensure sync with server
+            const updatedTrips = await apiService.getTrips();
+            setTrips(updatedTrips);
         } catch (err: any) {
             addToast(err.message || 'Failed to update trip', 'error');
             throw err;

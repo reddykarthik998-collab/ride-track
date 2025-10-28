@@ -6,6 +6,7 @@ import Modal from '../../components/Modal';
 import Input from '../../components/Input';
 import { CameraIcon, CheckIcon, MapPinIcon, ChevronRightIcon } from '../../components/icons/Icons';
 import { useAppContext } from '../../contexts/AppContext';
+import { apiService } from '../../utils/apiService';
 import { formatDateTime } from '../../utils/formatters';
 
 interface RideCardProps {
@@ -24,22 +25,32 @@ const RideCard: React.FC<RideCardProps> = ({ trip, onCheckIn, onCheckOut }) => {
     
     const [endOdometer, setEndOdometer] = useState<string>('');
     const [remarks, setRemarks] = useState<string>('');
+    const [startPhoto, setStartPhoto] = useState<File | null>(null);
+    const [endPhoto, setEndPhoto] = useState<File | null>(null);
 
     useEffect(() => {
         setCheckInTime(new Date(trip.plannedCheckInTime).toISOString().slice(0, 16));
         setStartOdometer(String(trip.plannedStartOdometer));
     }, [trip]);
 
-    const handleCheckIn = () => {
+    const handleCheckIn = async () => {
         if (!startOdometer) {
             alert('Please enter the starting odometer reading.');
             return;
         }
-        onCheckIn(new Date(checkInTime).toISOString(), Number(startOdometer));
-        setCheckInModalOpen(false);
+        try {
+            onCheckIn(new Date(checkInTime).toISOString(), Number(startOdometer));
+            if (startPhoto) {
+                await apiService.uploadStartPhoto(trip.id, startPhoto);
+            }
+            setCheckInModalOpen(false);
+        } catch (error) {
+            alert('Failed to check in. Please try again.');
+            console.error('Check-in error:', error);
+        }
     };
     
-    const handleCheckOut = () => {
+    const handleCheckOut = async () => {
         if (!endOdometer) {
             alert('Please enter the ending odometer reading.');
             return;
@@ -48,8 +59,16 @@ const RideCard: React.FC<RideCardProps> = ({ trip, onCheckIn, onCheckOut }) => {
             alert('End odometer must be greater than the start odometer.');
             return;
         }
-        onCheckOut(Number(endOdometer), remarks);
-        setCheckOutModalOpen(false);
+        try {
+            onCheckOut(Number(endOdometer), remarks);
+            if (endPhoto) {
+                await apiService.uploadEndPhoto(trip.id, endPhoto);
+            }
+            setCheckOutModalOpen(false);
+        } catch (error) {
+            alert('Failed to check out. Please try again.');
+            console.error('Check-out error:', error);
+        }
     };
 
     const getStatusChip = (status: TripStatus) => {
@@ -122,8 +141,8 @@ const RideCard: React.FC<RideCardProps> = ({ trip, onCheckIn, onCheckOut }) => {
                     <Input id="start-odo" label="Start Odometer (km)" type="number" value={startOdometer} onChange={e => setStartOdometer(e.target.value)} />
                     <div>
                         <label className="block text-sm font-medium text-neutral-700 mb-1">Odometer Photo</label>
-                        <Button variant="secondary" icon={<CameraIcon />} className="w-full">Upload Photo</Button>
-                        <p className="text-xs text-neutral-500 mt-1">Photo upload is for demonstration purposes.</p>
+                        <input type="file" accept="image/*" capture="environment" onChange={e => setStartPhoto(e.target.files?.[0] || null)} className="block w-full text-sm" />
+                        {startPhoto && <p className="text-xs text-neutral-500 mt-1">{startPhoto.name}</p>}
                     </div>
                 </div>
                 <div className="bg-neutral-100 px-6 py-3 text-right">
@@ -138,8 +157,8 @@ const RideCard: React.FC<RideCardProps> = ({ trip, onCheckIn, onCheckOut }) => {
                     <Input id="end-odo" label="End Odometer (km)" type="number" value={endOdometer} onChange={e => setEndOdometer(e.target.value)} autoFocus/>
                     <div>
                          <label className="block text-sm font-medium text-neutral-700 mb-1">Odometer Photo</label>
-                         <Button variant="secondary" icon={<CameraIcon />} className="w-full">Upload Photo</Button>
-                         <p className="text-xs text-neutral-500 mt-1">Photo upload is for demonstration purposes.</p>
+                         <input type="file" accept="image/*" capture="environment" onChange={e => setEndPhoto(e.target.files?.[0] || null)} className="block w-full text-sm" />
+                         {endPhoto && <p className="text-xs text-neutral-500 mt-1">{endPhoto.name}</p>}
                     </div>
                     <div>
                         <label htmlFor="remarks" className="block text-sm font-medium text-neutral-700 mb-1">Remarks (Optional)</label>

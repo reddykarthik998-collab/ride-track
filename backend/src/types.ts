@@ -71,10 +71,12 @@ export interface Trip {
 
     actualCheckInTime?: string;
     actualStartOdometer?: number;
-    startOdometerPhotoUrl?: string;
+    startOdometerPhotoUrl?: string; // legacy url
+    startOdometerPhotoId?: string;  // GridFS ObjectId string
     actualCheckOutTime?: string;
     actualEndOdometer?: number;
-    endOdometerPhotoUrl?: string;
+    endOdometerPhotoUrl?: string;   // legacy url
+    endOdometerPhotoId?: string;    // GridFS ObjectId string
     remarks?: string;
 
     status: TripStatus;

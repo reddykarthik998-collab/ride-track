@@ -4,10 +4,12 @@ import { useAppContext } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../../components/Card';
 import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
-import { PlusIcon, EditIcon, TrashIcon, ShareIcon } from '../../components/icons/Icons';
+import { PlusIcon, EditIcon, TrashIcon, ShareIcon, CloseIcon } from '../../components/icons/Icons';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import ShareTripModal from '../../components/ShareTripModal';
 import { formatDateTime } from '../../utils/formatters';
+import Modal from '../../components/Modal';
+import { apiService } from '../../utils/apiService';
 import TripFormModal from '../../components/TripFormModal';
 import ExportButton from '../../components/ExportButton';
 import { exportToCsv } from '../../utils/exporter';
@@ -18,6 +20,7 @@ const TripManagement: React.FC = () => {
     const [tripToEdit, setTripToEdit] = useState<Trip | null>(null);
     const [tripToDelete, setTripToDelete] = useState<string | null>(null);
     const [tripToShare, setTripToShare] = useState<Trip | null>(null);
+    const [photoTrip, setPhotoTrip] = useState<Trip | null>(null);
     
     const tripsWithData = useMemo(() => {
         return trips.map(trip => ({
@@ -137,6 +140,9 @@ const TripManagement: React.FC = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">{getStatusChip(trip.status)}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                                 <Button size="sm" variant="secondary" onClick={() => setTripToShare(trip)} icon={<ShareIcon />} aria-label={`Share trip ${trip.tripNumber}`} />
+                                                <Button size="sm" variant="secondary" onClick={() => setPhotoTrip(trip)} aria-label={`View photos ${trip.tripNumber}`}>
+                                                    👁
+                                                </Button>
                                                 <Button size="sm" variant="secondary" icon={<EditIcon />} onClick={() => openFormModal(trip)} aria-label={`Edit trip ${trip.tripNumber}`} />
                                                 <Button size="sm" variant="danger" onClick={() => openConfirmModal(trip.id)} icon={<TrashIcon />} aria-label={`Delete trip ${trip.tripNumber}`} />
                                             </td>
@@ -162,6 +168,24 @@ const TripManagement: React.FC = () => {
                 onClose={() => setTripToShare(null)}
                 trip={tripToShare}
             />
+
+            {/* Photos Modal */}
+            <Modal isOpen={!!photoTrip} onClose={() => setPhotoTrip(null)} title={`Photos for Trip ${photoTrip?.tripNumber || ''}`}>
+                {photoTrip?.status !== 'COMPLETED' ? (
+                    <div className="p-6 text-sm text-neutral-600">Photos will be available after the trip is marked as Completed.</div>
+                ) : (
+                    <div className="p-6 space-y-4">
+                        <div>
+                            <h4 className="text-sm font-semibold mb-1">Start Odometer Photo</h4>
+                            {photoTrip && <img alt="Start Odometer" className="w-full rounded" src={apiService.getStartPhotoUrl(photoTrip.id)} />}
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-semibold mb-1">End Odometer Photo</h4>
+                            {photoTrip && <img alt="End Odometer" className="w-full rounded" src={apiService.getEndPhotoUrl(photoTrip.id)} />}
+                        </div>
+                    </div>
+                )}
+            </Modal>
             
             <ConfirmationModal 
                 isOpen={!!tripToDelete}
