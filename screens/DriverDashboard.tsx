@@ -134,7 +134,8 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ driver, initialTrip }
                         <p className="text-sm text-brand-green">This trip is already completed. Details shown below are read-only.</p>
                         <div className="p-3 bg-neutral-100 rounded-md text-sm space-y-2">
                             <p><strong>Client:</strong> {completedTripView?.bookingClientName}</p>
-                            <p><strong>Reporting Point:</strong> {completedTripView?.reportingPoint}</p>
+                            <p><strong>Customer Name:</strong> {completedTripView?.customerName}</p>
+                            <p><strong>Customer Number:</strong> {completedTripView?.customerNumber}</p>
                             {completedTripView?.actualCheckInTime && <p><strong>Check-in:</strong> {formatDateTime(completedTripView.actualCheckInTime)}</p>}
                             {completedTripView?.actualStartOdometer && <p><strong>Start Odometer:</strong> {completedTripView.actualStartOdometer} km</p>}
                             {completedTripView?.actualCheckOutTime && <p><strong>Check-out:</strong> {formatDateTime(completedTripView.actualCheckOutTime)}</p>}

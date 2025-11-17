@@ -22,7 +22,7 @@ This project consists of two parts:
 In Railway dashboard, add these environment variables:
 
 ```env
-MONGODB_URI=mongodb+srv://ridetrack97_db_user:mz1ATulvmhkXRPMc@ridetrack-pro.br2mvpe.mongodb.net/?appName=ridetrack-pro
+MONGODB_URI=mongodb+srv://reddykarthik998_db_user:MFP9XhWmZ6E4qbgQ@ridetrack.8w6ek67.mongodb.net/?appName=ridetrack
 PORT=3001
 NODE_ENV=production
 FRONTEND_URL=https://your-frontend-url.vercel.app

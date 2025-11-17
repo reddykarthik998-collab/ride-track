@@ -58,15 +58,14 @@ const TripManagement: React.FC = () => {
             const fare = fares.find(f => f.id === trip.fareId);
             return {
                 'Trip Number': trip.tripNumber,
-                'Bill Number': (trip as any).billNumber || 'N/A',
+                'Duty Slip Number': (trip as any).dutySlipNumber || 'N/A',
                 'Status': trip.status,
                 'Client': trip.clientName,
                 'Event': event?.name || 'N/A',
                 'Booking Client/Dept': trip.bookingClientName,
                 'Description': trip.description || 'N/A',
-                'Reporting Point': trip.reportingPoint,
-                'Reporting To': trip.reportingTo,
-                'Reporting To Phone': trip.reportingToPhone,
+                'Customer Name': trip.customerName,
+                'Customer Number': trip.customerNumber,
                 'Driver': trip.driverName,
                 'Driver Phone': driver?.phone || 'N/A',
                 'Vehicle': driver?.vehicleName || 'N/A',
@@ -133,7 +132,7 @@ const TripManagement: React.FC = () => {
                                     {tripsWithData.map(trip => (
                                         <tr key={trip.id}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">{trip.tripNumber}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{(trip as any).billNumber || 'N/A'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{(trip as any).dutySlipNumber || 'N/A'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{trip.clientName}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{trip.driverName}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">{formatDateTime(trip.plannedCheckInTime)}</td>

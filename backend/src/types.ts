@@ -60,13 +60,15 @@ export interface Trip {
     bookingClientName: string;
     driverId: string;
     fareId: string;
+    dutySlipNumber: string;
     
     description?: string;
-    reportingPoint: string;
-    reportingTo: string;
-    reportingToPhone: string;
+    customerName: string;
+    customerNumber: string;
     plannedCheckInTime: string;
+    plannedCheckOutTime: string;
     plannedStartOdometer: number;
+    plannedEndOdometer: number;
     destinationUrl?: string;
 
     actualCheckInTime?: string;

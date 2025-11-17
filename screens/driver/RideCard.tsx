@@ -101,8 +101,8 @@ const RideCard: React.FC<RideCardProps> = ({ trip, onCheckIn, onCheckOut }) => {
                         <h3 className="font-bold text-neutral-700">Trip Details</h3>
                         <p><strong>Vehicle:</strong> {driver?.vehicleName} ({driver?.vehicleLicensePlate})</p>
                         <p><strong>Client:</strong> {trip.bookingClientName}</p>
-                        <p><strong>Reporting Point:</strong> {trip.reportingPoint}</p>
-                        <p><strong>Reporting To:</strong> {trip.reportingTo} ({trip.reportingToPhone})</p>
+                        <p><strong>Customer Name:</strong> {trip.customerName}</p>
+                        <p><strong>Customer Number:</strong> {trip.customerNumber}</p>
                         {trip.description && <p><strong>Description:</strong> {trip.description}</p>}
                     </div>
                     

@@ -66,15 +66,16 @@ export interface Trip {
     bookingClientName: string; // Stores the manually entered client name, replacing the old Client entity.
     driverId: string;
     fareId: string;
-    billNumber?: string;
+    dutySlipNumber: string;
     
     // Planning fields from company
     description?: string;
-    reportingPoint: string;
-    reportingTo: string;
-    reportingToPhone: string;
+    customerName: string;
+    customerNumber: string;
     plannedCheckInTime: string; // ISO String
+    plannedCheckOutTime: string; // ISO String
     plannedStartOdometer: number;
+    plannedEndOdometer: number;
     destinationUrl?: string;
 
     // Execution fields from driver

@@ -18,6 +18,7 @@ interface TripFormState {
     clientId: string;
     eventId?: string;
     bookingClientName: string;
+    dutySlipNumber: string;
     
     driverPhone: string;
     driverName: string;
@@ -26,12 +27,14 @@ interface TripFormState {
     
     fareId: string;
     description?: string;
-    reportingPoint: string;
-    reportingTo: string;
-
-    reportingToPhone: string;
-    plannedCheckInTime: string;
-    plannedStartOdometer: number | string;
+    customerName: string;
+    customerNumber: string;
+    checkInDate: string;
+    checkInTime: string;
+    checkOutDate: string;
+    checkOutTime: string;
+    startOdometer: number | string;
+    endOdometer: number | string;
     destinationUrl?: string;
 }
 
@@ -46,16 +49,20 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
         eventId: '',
         clientId: '',
         bookingClientName: '',
+        dutySlipNumber: '',
         driverPhone: '',
         driverName: '',
         vehicleName: '',
         vehicleLicensePlate: '',
         fareId: '',
-        reportingPoint: '',
-        reportingTo: '',
-        reportingToPhone: '',
-        plannedCheckInTime: '',
-        plannedStartOdometer: '',
+        customerName: '',
+        customerNumber: '',
+        checkInDate: '',
+        checkInTime: '',
+        checkOutDate: '',
+        checkOutTime: '',
+        startOdometer: '',
+        endOdometer: '',
         description: '',
         destinationUrl: '',
     };
@@ -70,6 +77,9 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
             setErrors({}); 
             if (tripToEdit) {
                 const driver = drivers.find(d => d.id === tripToEdit.driverId);
+                const checkInDateTime = tripToEdit.plannedCheckInTime ? new Date(tripToEdit.plannedCheckInTime) : null;
+                const checkOutDateTime = tripToEdit.plannedCheckOutTime ? new Date(tripToEdit.plannedCheckOutTime) : null;
+                
                 setFormData({
                     ...initialFormState,
                     ...tripToEdit,
@@ -77,13 +87,24 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
                     driverName: driver?.name || '',
                     vehicleName: driver?.vehicleName || '',
                     vehicleLicensePlate: driver?.vehicleLicensePlate || '',
-                    plannedCheckInTime: tripToEdit.plannedCheckInTime ? formatDateForInput(new Date(tripToEdit.plannedCheckInTime)) : '',
+                    checkInDate: checkInDateTime ? checkInDateTime.toISOString().split('T')[0] : '',
+                    checkInTime: checkInDateTime ? checkInDateTime.toTimeString().slice(0, 5) : '',
+                    checkOutDate: checkOutDateTime ? checkOutDateTime.toISOString().split('T')[0] : '',
+                    checkOutTime: checkOutDateTime ? checkOutDateTime.toTimeString().slice(0, 5) : '',
+                    startOdometer: tripToEdit.plannedStartOdometer || '',
+                    endOdometer: tripToEdit.plannedEndOdometer || '',
                 });
                 setIsExistingDriver(!!driver);
             } else {
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
                 setFormData({
                     ...initialFormState,
-                    plannedCheckInTime: formatDateForInput(new Date()),
+                    checkInDate: now.toISOString().split('T')[0],
+                    checkInTime: now.toTimeString().slice(0, 5),
+                    checkOutDate: tomorrow.toISOString().split('T')[0],
+                    checkOutTime: now.toTimeString().slice(0, 5),
                 });
                 setIsExistingDriver(false);
             }
@@ -102,7 +123,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
     
     const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const clientId = e.target.value;
-        setFormData(prev => ({ ...prev, clientId, eventId: '', reportingTo: '', reportingToPhone: '' }));
+        setFormData(prev => ({ ...prev, clientId, eventId: '', customerName: '', customerNumber: '' }));
         if (errors.clientId || errors.eventId) {
             setErrors(prev => ({...prev, clientId: undefined, eventId: undefined}));
         }
@@ -115,10 +136,10 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
         if (selectedCustomer) {
             setFormData(prev => ({
                 ...prev,
-                reportingTo: selectedCustomer.name,
-                reportingToPhone: selectedCustomer.phone
+                customerName: selectedCustomer.name,
+                customerNumber: selectedCustomer.phone
             }));
-            setErrors(prev => ({...prev, reportingTo: undefined, reportingToPhone: undefined }));
+            setErrors(prev => ({...prev, customerName: undefined, customerNumber: undefined }));
         }
     };
 
@@ -168,16 +189,22 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
         
         if (!formData.fareId) newErrors.fareId = 'Fare is required.';
         if (!formData.bookingClientName.trim()) newErrors.bookingClientName = 'Booking client/dept is required.';
-        if (!formData.reportingPoint.trim()) newErrors.reportingPoint = 'Reporting point is required.';
-        if (!formData.reportingTo.trim()) newErrors.reportingTo = 'Reporting person\'s name is required.';
-        if (!formData.reportingToPhone.trim()) {
-            newErrors.reportingToPhone = 'Reporting person\'s phone is required.';
-        } else if (!/^\d{10}$/.test(formData.reportingToPhone.trim())) {
-            newErrors.reportingToPhone = 'Please enter a valid 10-digit phone number.';
+        if (!formData.dutySlipNumber.trim()) newErrors.dutySlipNumber = 'Duty Slip Number is required.';
+        if (!formData.customerName.trim()) newErrors.customerName = 'Customer name is required.';
+        if (!formData.customerNumber.trim()) {
+            newErrors.customerNumber = 'Customer number is required.';
+        } else if (!/^\d{10}$/.test(formData.customerNumber.trim())) {
+            newErrors.customerNumber = 'Please enter a valid 10-digit phone number.';
         }
-        if (!formData.plannedCheckInTime) newErrors.plannedCheckInTime = 'Check-in time is required.';
-        if (formData.plannedStartOdometer === '' || Number(formData.plannedStartOdometer) < 0) {
-            newErrors.plannedStartOdometer = 'Odometer must be a non-negative number.';
+        if (!formData.checkInDate) newErrors.checkInDate = 'Check-in date is required.';
+        if (!formData.checkInTime) newErrors.checkInTime = 'Check-in time is required.';
+        if (!formData.checkOutDate) newErrors.checkOutDate = 'Check-out date is required.';
+        if (!formData.checkOutTime) newErrors.checkOutTime = 'Check-out time is required.';
+        if (formData.startOdometer === '' || Number(formData.startOdometer) < 0) {
+            newErrors.startOdometer = 'Start odometer must be a non-negative number.';
+        }
+        if (formData.endOdometer === '' || Number(formData.endOdometer) < 0) {
+            newErrors.endOdometer = 'End odometer must be a non-negative number.';
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -205,32 +232,37 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
                 driverId = newDriver.id;
             }
             
-            const reportingPhone = formData.reportingToPhone.trim();
-            if (formData.clientId && reportingPhone && formData.reportingTo.trim()) {
+            const customerPhone = formData.customerNumber.trim();
+            if (formData.clientId && customerPhone && formData.customerName.trim()) {
                 const isExistingCustomer = customers.some(
-                    c => c.clientId === formData.clientId && c.phone === reportingPhone
+                    c => c.clientId === formData.clientId && c.phone === customerPhone
                 );
                 if (!isExistingCustomer) {
                     await addCustomer({
-                        name: formData.reportingTo.trim(),
-                        phone: reportingPhone,
+                        name: formData.customerName.trim(),
+                        phone: customerPhone,
                         clientId: formData.clientId,
                     });
                 }
             }
 
+            const checkInDateTime = new Date(`${formData.checkInDate}T${formData.checkInTime}`);
+            const checkOutDateTime = new Date(`${formData.checkOutDate}T${formData.checkOutTime}`);
+            
             const tripDataForSave = {
                 clientId: formData.clientId,
                 eventId: formData.eventId || undefined,
                 bookingClientName: formData.bookingClientName,
+                dutySlipNumber: formData.dutySlipNumber,
                 driverId: driverId,
                 fareId: formData.fareId,
                 description: formData.description,
-                reportingPoint: formData.reportingPoint,
-                reportingTo: formData.reportingTo,
-                reportingToPhone: formData.reportingToPhone,
-                plannedCheckInTime: new Date(formData.plannedCheckInTime).toISOString(),
-                plannedStartOdometer: Number(formData.plannedStartOdometer),
+                customerName: formData.customerName,
+                customerNumber: formData.customerNumber,
+                plannedCheckInTime: checkInDateTime.toISOString(),
+                plannedCheckOutTime: checkOutDateTime.toISOString(),
+                plannedStartOdometer: Number(formData.startOdometer),
+                plannedEndOdometer: Number(formData.endOdometer),
                 destinationUrl: formData.destinationUrl,
                 status: tripToEdit?.status || 'ASSIGNED',
             };
@@ -264,6 +296,10 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
                     </Select>
                     <Input id="bookingClientName" name="bookingClientName" label="Booking Client / Dept / Other" value={formData.bookingClientName} onChange={handleChange} required error={errors.bookingClientName} placeholder="e.g. Lupin R&D or Guest Name" />
                     
+                    <div className="sm:col-span-2">
+                        <Input id="dutySlipNumber" name="dutySlipNumber" label="Duty Slip Number" value={formData.dutySlipNumber} onChange={handleChange} required error={errors.dutySlipNumber} placeholder="Enter duty slip number" />
+                    </div>
+                    
                     <div className="sm:col-span-2 p-4 border rounded-md border-neutral-300 space-y-4">
                          <h3 className="font-semibold text-neutral-700">Driver & Vehicle Details</h3>
                          <Input 
@@ -281,7 +317,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
                         />
                          <Input id="driverName" name="driverName" label="Driver Name" value={formData.driverName} onChange={handleChange} required error={errors.driverName} disabled={isExistingDriver} />
                          <div className="grid grid-cols-2 gap-4">
-                             <Input id="vehicleName" name="vehicleName" label="Vehicle Name" value={formData.vehicleName} onChange={handleChange} required error={errors.vehicleName} disabled={isExistingDriver} />
+                             <Input id="vehicleName" name="vehicleName" label="Vehicle Name/Type" value={formData.vehicleName} onChange={handleChange} required error={errors.vehicleName} disabled={isExistingDriver} />
                              <Input id="vehicleLicensePlate" name="vehicleLicensePlate" label="Plate Number" value={formData.vehicleLicensePlate} onChange={handleChange} required error={errors.vehicleLicensePlate} disabled={isExistingDriver} />
                          </div>
                     </div>
@@ -299,21 +335,26 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, tripToEd
 
                     <div className="sm:col-span-2 p-4 border rounded-md border-neutral-300 space-y-4">
                         <h3 className="font-semibold text-neutral-700">Reporting Details</h3>
-                        <Input id="reportingPoint" name="reportingPoint" label="Reporting Point" value={formData.reportingPoint || ''} onChange={handleChange} required error={errors.reportingPoint} />
-                         <Select id="reportingToCustomer" name="reportingToCustomer" label="Select Contact (Optional)" onChange={handleCustomerChange} disabled={!formData.clientId}>
+                         <Select id="customerSelect" name="customerSelect" label="Select Contact (Optional)" onChange={handleCustomerChange} disabled={!formData.clientId}>
                             <option value="">-- Enter manually or select contact --</option>
                             {filteredCustomers.map(c => <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>)}
                         </Select>
                         <div className="grid grid-cols-2 gap-4">
-                            <Input id="reportingTo" name="reportingTo" label="Reporting To (Name)" value={formData.reportingTo || ''} onChange={handleChange} required error={errors.reportingTo} />
-                            <Input id="reportingToPhone" name="reportingToPhone" label="Reporting To (Phone)" type="tel" value={formData.reportingToPhone || ''} onChange={handleChange} required error={errors.reportingToPhone} />
+                            <Input id="customerName" name="customerName" label="Customer Name" value={formData.customerName || ''} onChange={handleChange} required error={errors.customerName} />
+                            <Input id="customerNumber" name="customerNumber" label="Customer Number" type="tel" value={formData.customerNumber || ''} onChange={handleChange} required error={errors.customerNumber} />
                         </div>
                     </div>
 
-                    <Input id="plannedStartOdometer" name="plannedStartOdometer" label="Planned Start Odometer (km)" type="number" value={formData.plannedStartOdometer || ''} onChange={handleChange} required error={errors.plannedStartOdometer} />
-                    <div className="sm:col-span-2">
-                        <Input id="plannedCheckInTime" name="plannedCheckInTime" label="Planned Check-in Time" type="datetime-local" value={formData.plannedCheckInTime || ''} onChange={handleChange} required error={errors.plannedCheckInTime} />
+                    <div className="sm:col-span-2 grid grid-cols-2 gap-4">
+                        <Input id="checkInDate" name="checkInDate" label="Check In Date" type="date" value={formData.checkInDate || ''} onChange={handleChange} required error={errors.checkInDate} />
+                        <Input id="checkInTime" name="checkInTime" label="Check In Time" type="time" value={formData.checkInTime || ''} onChange={handleChange} required error={errors.checkInTime} />
                     </div>
+                    <div className="sm:col-span-2 grid grid-cols-2 gap-4">
+                        <Input id="checkOutDate" name="checkOutDate" label="Check Out Date" type="date" value={formData.checkOutDate || ''} onChange={handleChange} required error={errors.checkOutDate} />
+                        <Input id="checkOutTime" name="checkOutTime" label="Check Out Time" type="time" value={formData.checkOutTime || ''} onChange={handleChange} required error={errors.checkOutTime} />
+                    </div>
+                    <Input id="startOdometer" name="startOdometer" label="Start Odometer (km)" type="number" value={formData.startOdometer || ''} onChange={handleChange} required error={errors.startOdometer} />
+                    <Input id="endOdometer" name="endOdometer" label="End Odometer (km)" type="number" value={formData.endOdometer || ''} onChange={handleChange} required error={errors.endOdometer} />
                     <div className="sm:col-span-2">
                         <Input id="destinationUrl" name="destinationUrl" label="Destination URL (Optional)" value={formData.destinationUrl || ''} onChange={handleChange} />
                     </div>

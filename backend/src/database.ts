@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const connectionString = process.env.MONGODB_URI || 'mongodb+srv://ridetrack97_db_user:mz1ATulvmhkXRPMc@ridetrack-pro.br2mvpe.mongodb.net/?appName=ridetrack-pro';
+const connectionString = process.env.MONGODB_URI || 'mongodb+srv://reddykarthik998_db_user:MFP9XhWmZ6E4qbgQ@ridetrack.8w6ek67.mongodb.net/?appName=ridetrack';
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
