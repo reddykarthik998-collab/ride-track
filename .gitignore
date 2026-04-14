@@ -42,6 +42,7 @@ lerna-debug.log*
 *.sqlite
 *.sqlite3
 ridetrack.db
+backend/db-backups/
 
 # Temporary files
 *.tmp

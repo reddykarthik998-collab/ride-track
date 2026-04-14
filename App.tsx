@@ -6,6 +6,7 @@ import DriverDashboard from './screens/DriverDashboard';
 import { Header } from './components/Header';
 import { CarIcon, UserCircleIcon } from './components/icons/Icons';
 import { AppProvider, useAppContext } from './contexts/AppContext';
+import { API_BASE_URL } from './utils/apiService';
 
 // Authentication state interface
 interface AuthState {
@@ -35,11 +36,11 @@ const AppContent: React.FC = () => {
                     // Validate token with backend if it exists
                     if (parsedAuth.token) {
                         try {
-                            const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://ride-track-pro.onrender.com/api';
-                            const response = await fetch(`${API_BASE}/auth/me`, {
+                            const response = await fetch(`${API_BASE_URL}/auth/me`, {
                                 headers: {
                                     'Authorization': `Bearer ${parsedAuth.token}`
-                                }
+                                },
+                                signal: AbortSignal.timeout(15_000)
                             });
                             
                             if (response.ok) {

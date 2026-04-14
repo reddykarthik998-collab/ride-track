@@ -7,6 +7,7 @@ import Input from '../components/Input';
 import { CarIcon, UserCircleIcon } from '../components/icons/Icons';
 import { formatDateTime } from '../utils/formatters';
 import { useAppContext } from '../contexts/AppContext';
+import { API_BASE_URL } from '../utils/apiService';
 
 interface LoginScreenProps {
     onLogin: (type: UserType, userId?: string, trip?: Trip, token?: string) => void;
@@ -30,9 +31,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, trips }) => {
         setLoginError('');
         
         try {
-            // Use backend authentication using configured API base URL
-            const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://ride-track-pro.onrender.com/api';
-            const response = await fetch(`${API_BASE}/auth/login`, {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
