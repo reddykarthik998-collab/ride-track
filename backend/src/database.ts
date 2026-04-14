@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const connectionString = process.env.MONGODB_URI || 'mongodb+srv://reddykarthik998_db_user:MFP9XhWmZ6E4qbgQ@ridetrack.8w6ek67.mongodb.net/?appName=ridetrack';
+const connectionString = process.env.MONGODB_URI;
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -11,6 +11,9 @@ let bucket: GridFSBucket | null = null;
 
 export const initializeDatabase = async () => {
   try {
+    if (!connectionString) {
+      throw new Error('MONGODB_URI environment variable is required');
+    }
     // Connect to MongoDB Atlas
     client = new MongoClient(connectionString);
     await client.connect();
